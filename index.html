@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iKneeGo 智能外骨骼體驗</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            transition: background-color 0.5s ease;
+        }
+
+        /* 穿戴後的背景科技藍 */
+        body.active {
+            background-color: #003a6c;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        #status-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        /* 走路動畫模擬 */
+        .active #status-icon {
+            animation: walking 1s infinite alternate;
+            color: #00d4ff;
+        }
+
+        @keyframes walking {
+            from { transform: translateY(0); }
+            to { transform: translateY(-20px); }
+        }
+
+        .info-card {
+            background: white;
+            color: #333;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 300px;
+            margin-bottom: 30px;
+        }
+
+        /* 按鈕設計 */
+        #power-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,123,255,0.3);
+            transition: all 0.2s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #power-btn:active {
+            transform: scale(0.9);
+            background-color: #0056b3;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: #ddd;
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .active .progress-container {
+            display: block;
+        }
+
+        #energy-bar {
+            height: 100%;
+            background: #00d4ff;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="status-icon">🚶‍♂️</div>
+    
+    <div class="info-card">
+        <h2 id="title">自然行走狀態</h2>
+        <p id="desc">感受肌肉的負擔與關節的壓力</p>
+        <div class="progress-container">
+            <div id="energy-bar"></div>
+        </div>
+    </div>
+
+    <button id="power-btn">長按開啟 iKneeGo 助力</button>
+    <p style="margin-top: 20px; font-size: 14px; opacity: 0.7;">（請使用手機長按體驗震動回饋）</p>
+</div>
+
+<script>
+    const btn = document.getElementById('power-btn');
+    const body = document.body;
+    const icon = document.getElementById('status-icon');
+    const title = document.getElementById('title');
+    const desc = document.getElementById('desc');
+    const energyBar = document.getElementById('energy-bar');
+
+    let energy = 0;
+    let timer;
+
+    // 啟動功能
+    function startPower() {
+        body.classList.add('active');
+        icon.innerText = "🦾"; // 換成機械手臂圖標
+        title.innerText = "iKneeGo 運作中";
+        desc.innerText = "智能動力介入，減輕膝蓋負擔 50%";
+        btn.innerText = "助力輸出中...";
+        
+        // 1. 觸發手機震動 (間歇震動模擬馬達)
+        if (navigator.vibrate) {
+            navigator.vibrate([100, 50, 100, 50, 100]); 
+        }
+
+        // 2. 能量條動畫
+        energy = 0;
+        timer = setInterval(() => {
+            if (energy < 100) {
+                energy += 5;
+                energyBar.style.width = energy + "%";
+            }
+        }, 50);
+    }
+
+    // 關閉功能
+    function stopPower() {
+        body.classList.remove('active');
+        icon.innerText = "🚶‍♂️";
+        title.innerText = "自然行走狀態";
+        desc.innerText = "感受肌肉的負擔與關節的壓力";
+        btn.innerText = "長按開啟 iKneeGo 助力";
+        clearInterval(timer);
+        energyBar.style.width = "0%";
+    }
+
+    // 綁定事件 (支援電腦與手機)
+    btn.addEventListener('mousedown', startPower);
+    btn.addEventListener('mouseup', stopPower);
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); startPower(); });
+    btn.addEventListener('touchend', stopPower);
+
+</script>
+
+</body>
+</html>
