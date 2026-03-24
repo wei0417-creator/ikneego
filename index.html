@@ -3,170 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iKneeGo 智能外骨骼體驗</title>
+    <title>iKneeGo 專業步態分析體驗</title>
     <style>
+        :root {
+            --primary: #007bff;
+            --secondary: #00d4ff;
+            --stance: #ff9f1c; 
+            --swing: #2ec4b6;
+            --bg: #f4f7f6;
+        }
+
         body {
-            margin: 0;
-            padding: 0;
-            font-family: "Microsoft JhengHei", sans-serif;
-            background-color: #f4f7f6;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            transition: background-color 0.5s ease;
+            margin: 0; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background: var(--bg); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; min-height: 100vh;
+            transition: background-color 0.5s; overflow: hidden;
         }
 
-        /* 穿戴後的背景科技藍 */
-        body.active {
-            background-color: #003a6c;
-            color: white;
+        body.active { background: #001a33; color: white; }
+
+        .container { width: 90%; max-width: 550px; text-align: center; }
+
+        /* 影片容器：保持影片比例並防止點擊 YouTube 原生按鈕 */
+        .video-wrapper {
+            width: 100%; position: relative; border-radius: 20px;
+            overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 25px; aspect-ratio: 16 / 9; background: #000;
         }
 
-        .container {
-            text-align: center;
-            padding: 20px;
+        #player { width: 100%; height: 100%; pointer-events: none; } /* 禁用點擊影片 */
+
+        .video-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 15px; box-sizing: border-box;
         }
 
-        #status-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-            transition: transform 0.3s ease;
+        .data-tag {
+            align-self: flex-end; background: rgba(255, 255, 255, 0.9);
+            color: #333; padding: 5px 15px; border-radius: 20px;
+            font-size: 12px; font-weight: bold; transition: 0.3s;
+        }
+        .active .data-tag { background: var(--secondary); color: white; }
+
+        /* 步態分析圖表 */
+        .chart {
+            background: white; padding: 20px; border-radius: 20px;
+            margin-bottom: 30px; display: flex; justify-content: space-around;
+            align-items: flex-end; height: 130px; position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .active .chart { background: rgba(255,255,255,0.1); }
+
+        .bar { width: 12%; background: #eee; border-radius: 6px; position: relative; transition: 0.4s; }
+        
+        /* 初始不規則高度 */
+        .b1 { height: 95%; background: var(--stance); } /* IC */
+        .b2 { height: 45%; } 
+        .b3 { height: 80%; background: var(--stance); } /* Propulsion */
+        .b4 { height: 35%; }
+        .b5 { height: 70%; background: var(--swing); } /* Swing */
+
+        .active .bar { 
+            height: 55% !important; background: var(--secondary) !important; 
+            animation: glow 1s infinite alternate;
         }
 
-        /* 走路動畫模擬 */
-        .active #status-icon {
-            animation: walking 1s infinite alternate;
-            color: #00d4ff;
-        }
+        @keyframes glow { from { opacity: 0.7; } to { opacity: 1; } }
 
-        @keyframes walking {
-            from { transform: translateY(0); }
-            to { transform: translateY(-20px); }
-        }
+        .label { position: absolute; bottom: -25px; font-size: 11px; width: 100%; text-align: center; color: #888; }
+        .active .label { color: #aaa; }
 
-        .info-card {
-            background: white;
-            color: #333;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            max-width: 300px;
-            margin-bottom: 30px;
+        /* 交互按鈕 */
+        #action-btn {
+            width: 100%; padding: 22px; border-radius: 50px; border: none;
+            background: var(--primary); color: white; font-size: 20px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 15px 30px rgba(0,123,255,0.3);
+            -webkit-tap-highlight-color: transparent; user-select: none;
         }
-
-        /* 按鈕設計 */
-        #power-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 20px 40px;
-            font-size: 20px;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0,123,255,0.3);
-            transition: all 0.2s ease;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        #power-btn:active {
-            transform: scale(0.9);
-            background-color: #0056b3;
-        }
-
-        .progress-container {
-            width: 100%;
-            background: #ddd;
-            height: 10px;
-            border-radius: 5px;
-            margin-top: 20px;
-            overflow: hidden;
-            display: none;
-        }
-
-        .active .progress-container {
-            display: block;
-        }
-
-        #energy-bar {
-            height: 100%;
-            background: #00d4ff;
-            width: 0%;
-            transition: width 0.1s linear;
-        }
+        #action-btn:active { transform: scale(0.96); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="status-icon">🚶‍♂️</div>
+    <h2 id="main-title">iKneeGo 專業步態分析</h2>
     
-    <div class="info-card">
-        <h2 id="title">自然行走狀態</h2>
-        <p id="desc">感受肌肉的負擔與關節的壓力</p>
-        <div class="progress-container">
-            <div id="energy-bar"></div>
+    <div class="video-wrapper">
+        <div id="player"></div>
+        <div class="video-overlay">
+            <div class="data-tag" id="status-tag">偵測狀態：待機</div>
         </div>
     </div>
 
-    <button id="power-btn">長按開啟 iKneeGo 助力</button>
-    <p style="margin-top: 20px; font-size: 14px; opacity: 0.7;">（請使用手機長按體驗震動回饋）</p>
+    <div class="chart">
+        <div class="bar b1"><span class="label">IC(著地)</span></div>
+        <div class="bar b2"><span class="label">支撐</span></div>
+        <div class="bar b3"><span class="label">離地</span></div>
+        <div class="bar b4"><span class="label">擺動</span></div>
+        <div class="bar b5"><span class="label">新週期</span></div>
+    </div>
+
+    <button id="action-btn">長按開啟 iKneeGo 助力</button>
 </div>
 
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
-    const btn = document.getElementById('power-btn');
+    let player;
+    const btn = document.getElementById('action-btn');
     const body = document.body;
-    const icon = document.getElementById('status-icon');
-    const title = document.getElementById('title');
-    const desc = document.getElementById('desc');
-    const energyBar = document.getElementById('energy-bar');
+    const tag = document.getElementById('status-tag');
+    const title = document.getElementById('main-title');
 
-    let energy = 0;
-    let timer;
-
-    // 啟動功能
-    function startPower() {
-        body.classList.add('active');
-        icon.innerText = "🦾"; // 換成機械手臂圖標
-        title.innerText = "iKneeGo 運作中";
-        desc.innerText = "智能動力介入，減輕膝蓋負擔 50%";
-        btn.innerText = "助力輸出中...";
-        
-        // 1. 觸發手機震動 (間歇震動模擬馬達)
-        if (navigator.vibrate) {
-            navigator.vibrate([100, 50, 100, 50, 100]); 
-        }
-
-        // 2. 能量條動畫
-        energy = 0;
-        timer = setInterval(() => {
-            if (energy < 100) {
-                energy += 5;
-                energyBar.style.width = energy + "%";
+    // 初始化播放器
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+            videoId: 'ZxnMIa0PIO8', // 您的影片 ID
+            playerVars: {
+                'autoplay': 0,
+                'controls': 0,
+                'rel': 0,
+                'showinfo': 0,
+                'modestbranding': 1,
+                'loop': 1,
+                'playlist': 'ZxnMIa0PIO8',
+                'mute': 1,
+                'playsinline': 1
+            },
+            events: {
+                'onReady': onPlayerReady
             }
-        }, 50);
+        });
     }
 
-    // 關閉功能
-    function stopPower() {
+    function onPlayerReady(event) {
+        // 設定長按事件
+        btn.addEventListener('mousedown', startEffect);
+        btn.addEventListener('mouseup', stopEffect);
+        btn.addEventListener('touchstart', (e) => { e.preventDefault(); startEffect(); });
+        btn.addEventListener('touchend', stopEffect);
+    }
+
+    function startEffect() {
+        body.classList.add('active');
+        title.innerText = "⚡ 智能賦能運作中";
+        tag.innerText = "賦能強度：100%";
+        player.playVideo();
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    }
+
+    function stopEffect() {
         body.classList.remove('active');
-        icon.innerText = "🚶‍♂️";
-        title.innerText = "自然行走狀態";
-        desc.innerText = "感受肌肉的負擔與關節的壓力";
-        btn.innerText = "長按開啟 iKneeGo 助力";
-        clearInterval(timer);
-        energyBar.style.width = "0%";
+        title.innerText = "iKneeGo 專業步態分析";
+        tag.innerText = "偵測狀態：待機";
+        player.pauseVideo();
+        player.seekTo(0); // 停止時回到開頭（IC 著地瞬間）
     }
-
-    // 綁定事件 (支援電腦與手機)
-    btn.addEventListener('mousedown', startPower);
-    btn.addEventListener('mouseup', stopPower);
-    btn.addEventListener('touchstart', (e) => { e.preventDefault(); startPower(); });
-    btn.addEventListener('touchend', stopPower);
-
 </script>
 
 </body>
