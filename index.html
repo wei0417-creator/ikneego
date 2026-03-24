@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iKneeGo 專業步態分析體驗</title>
+    <title>iKneeGo 實證醫學步態分析</title>
     <style>
         :root {
             --primary: #007bff;
@@ -11,75 +11,73 @@
             --stance: #ff9f1c; 
             --swing: #2ec4b6;
             --bg: #f4f7f6;
+            --success: #28a745;
         }
 
         body {
             margin: 0; font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
             background: var(--bg); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; min-height: 100vh;
-            transition: background-color 0.5s; overflow: hidden;
+            align-items: center; min-height: 100vh; transition: 0.5s; padding: 20px 0;
         }
 
         body.active { background: #001a33; color: white; }
 
-        .container { width: 90%; max-width: 550px; text-align: center; }
+        .container { width: 90%; max-width: 600px; text-align: center; }
 
-        /* 影片容器：保持影片比例並防止點擊 YouTube 原生按鈕 */
+        /* 影片區域 */
         .video-wrapper {
             width: 100%; position: relative; border-radius: 20px;
             overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 25px; aspect-ratio: 16 / 9; background: #000;
+            margin-bottom: 20px; aspect-ratio: 16 / 9; background: #000;
         }
+        #player { width: 100%; height: 100%; pointer-events: none; }
 
-        #player { width: 100%; height: 100%; pointer-events: none; } /* 禁用點擊影片 */
-
-        .video-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; justify-content: space-between;
-            padding: 15px; box-sizing: border-box;
+        /* 實證數據浮層 */
+        .ebm-overlay {
+            position: absolute; top: 10px; left: 10px; right: 10px;
+            display: flex; justify-content: space-between; pointer-events: none;
         }
-
-        .data-tag {
-            align-self: flex-end; background: rgba(255, 255, 255, 0.9);
-            color: #333; padding: 5px 15px; border-radius: 20px;
-            font-size: 12px; font-weight: bold; transition: 0.3s;
+        .data-badge {
+            background: rgba(255,255,255,0.9); color: #333; padding: 5px 12px;
+            border-radius: 15px; font-size: 11px; font-weight: bold; opacity: 0; transition: 0.3s;
         }
-        .active .data-tag { background: var(--secondary); color: white; }
+        .active .data-badge { opacity: 1; transform: translateY(5px); }
+
+        /* 實證效益看板 */
+        .evidence-panel {
+            background: white; border-radius: 20px; padding: 15px;
+            margin-bottom: 20px; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+        .active .evidence-panel { background: rgba(255,255,255,0.1); color: white; }
+        .evidence-item { font-size: 13px; margin: 8px 0; display: flex; align-items: flex-start; gap: 8px; }
+        .evidence-item i { color: var(--success); }
 
         /* 步態分析圖表 */
         .chart {
             background: white; padding: 20px; border-radius: 20px;
             margin-bottom: 30px; display: flex; justify-content: space-around;
-            align-items: flex-end; height: 130px; position: relative;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            align-items: flex-end; height: 100px; position: relative;
         }
-        .active .chart { background: rgba(255,255,255,0.1); }
-
-        .bar { width: 12%; background: #eee; border-radius: 6px; position: relative; transition: 0.4s; }
+        .active .chart { background: rgba(255,255,255,0.05); }
+        .bar { width: 12%; background: #eee; border-radius: 6px; transition: 0.4s; position: relative; }
         
-        /* 初始不規則高度 */
-        .b1 { height: 95%; background: var(--stance); } /* IC */
-        .b2 { height: 45%; } 
-        .b3 { height: 80%; background: var(--stance); } /* Propulsion */
-        .b4 { height: 35%; }
-        .b5 { height: 70%; background: var(--swing); } /* Swing */
+        /* 初始不規則受力 */
+        .b1 { height: 90%; background: var(--stance); } 
+        .b2 { height: 40%; } 
+        .b3 { height: 75%; background: var(--stance); } 
+        .b4 { height: 30%; }
+        .b5 { height: 65%; background: var(--swing); }
 
-        .active .bar { 
-            height: 55% !important; background: var(--secondary) !important; 
-            animation: glow 1s infinite alternate;
-        }
+        .active .bar { height: 50% !important; background: var(--secondary) !important; }
+        .label { position: absolute; bottom: -22px; font-size: 10px; width: 100%; text-align: center; color: #888; }
 
-        @keyframes glow { from { opacity: 0.7; } to { opacity: 1; } }
-
-        .label { position: absolute; bottom: -25px; font-size: 11px; width: 100%; text-align: center; color: #888; }
-        .active .label { color: #aaa; }
-
-        /* 交互按鈕 */
+        /* 按鈕 */
         #action-btn {
-            width: 100%; padding: 22px; border-radius: 50px; border: none;
-            background: var(--primary); color: white; font-size: 20px;
+            width: 100%; padding: 20px; border-radius: 50px; border: none;
+            background: var(--primary); color: white; font-size: 18px;
             font-weight: bold; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 15px 30px rgba(0,123,255,0.3);
+            box-shadow: 0 10px 25px rgba(0,123,255,0.3);
             -webkit-tap-highlight-color: transparent; user-select: none;
         }
         #action-btn:active { transform: scale(0.96); }
@@ -88,24 +86,33 @@
 <body>
 
 <div class="container">
-    <h2 id="main-title">iKneeGo 專業步態分析</h2>
+    <h2 id="main-title">iKneeGo 實證醫學體驗</h2>
     
     <div class="video-wrapper">
         <div id="player"></div>
-        <div class="video-overlay">
-            <div class="data-tag" id="status-tag">偵測狀態：待機</div>
+        <div class="ebm-overlay">
+            <div class="data-badge">肌肉負擔 -30%</div>
+            <div class="data-badge">穩定度 +45%</div>
         </div>
     </div>
 
-    <div class="chart">
-        <div class="bar b1"><span class="label">IC(著地)</span></div>
-        <div class="bar b2"><span class="label">支撐</span></div>
-        <div class="bar b3"><span class="label">離地</span></div>
-        <div class="bar b4"><span class="label">擺動</span></div>
-        <div class="bar b5"><span class="label">新週期</span></div>
+    <div class="evidence-panel">
+        <strong style="font-size: 14px; color: var(--primary);">📋 臨床研究摘要 (EBM Summary)</strong>
+        <div class="evidence-item">✓ <b>平衡提升：</b> 輔助訓練顯著改善 TUG 與平衡評分 </div>
+        <div class="evidence-item">✓ <b>肌肉減壓：</b> 有效分擔膝伸肌與髖部負荷 </div>
+        <div class="evidence-item">✓ <b>居家延續：</b> MS 患者居家使用後，未穿戴時行走能力仍有進步 </div>
     </div>
 
-    <button id="action-btn">長按開啟 iKneeGo 助力</button>
+    <div class="chart">
+        <div class="bar b1"><span class="label">IC著地</span></div>
+        <div class="bar b2"><span class="label">支撐</span></div>
+        <div class="bar b3"><span class="label">推進</span></div>
+        <div class="bar b4"><span class="label">離地</span></div>
+        <div class="bar b5"><span class="label">擺動</span></div>
+    </div>
+
+    <button id="action-btn">長按開啟實證賦能體驗</button>
+    <p style="font-size: 11px; margin-top: 15px; opacity: 0.6;">數據源自神經工程與康復期刊及臨床試驗報告 [cite: 1, 2, 3, 4]</p>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -113,54 +120,34 @@
     let player;
     const btn = document.getElementById('action-btn');
     const body = document.body;
-    const tag = document.getElementById('status-tag');
     const title = document.getElementById('main-title');
 
-    // 初始化播放器
     function onYouTubeIframeAPIReady() {
         player = new YT.Player('player', {
-            videoId: 'ZxnMIa0PIO8', // 您的影片 ID
-            playerVars: {
-                'autoplay': 0,
-                'controls': 0,
-                'rel': 0,
-                'showinfo': 0,
-                'modestbranding': 1,
-                'loop': 1,
-                'playlist': 'ZxnMIa0PIO8',
-                'mute': 1,
-                'playsinline': 1
-            },
-            events: {
-                'onReady': onPlayerReady
-            }
+            videoId: 'ZxnMIa0PIO8',
+            playerVars: { 'autoplay': 0, 'controls': 0, 'rel': 0, 'modestbranding': 1, 'loop': 1, 'playlist': 'ZxnMIa0PIO8', 'mute': 1, 'playsinline': 1 },
+            events: { 'onReady': () => {
+                btn.addEventListener('mousedown', startEffect);
+                btn.addEventListener('mouseup', stopEffect);
+                btn.addEventListener('touchstart', (e) => { e.preventDefault(); startEffect(); });
+                btn.addEventListener('touchend', stopEffect);
+            }}
         });
-    }
-
-    function onPlayerReady(event) {
-        // 設定長按事件
-        btn.addEventListener('mousedown', startEffect);
-        btn.addEventListener('mouseup', stopEffect);
-        btn.addEventListener('touchstart', (e) => { e.preventDefault(); startEffect(); });
-        btn.addEventListener('touchend', stopEffect);
     }
 
     function startEffect() {
         body.classList.add('active');
-        title.innerText = "⚡ 智能賦能運作中";
-        tag.innerText = "賦能強度：100%";
+        title.innerText = "⚡ 實證賦能運作中";
         player.playVideo();
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
     }
 
     function stopEffect() {
         body.classList.remove('active');
-        title.innerText = "iKneeGo 專業步態分析";
-        tag.innerText = "偵測狀態：待機";
+        title.innerText = "iKneeGo 實證醫學體驗";
         player.pauseVideo();
-        player.seekTo(0); // 停止時回到開頭（IC 著地瞬間）
+        player.seekTo(0);
     }
 </script>
-
 </body>
 </html>
