@@ -3,74 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iKneeGo 快穿教學</title>
+    <title>iKneeGo 3分鐘快穿挑戰</title>
     <style>
-        body { font-family: sans-serif; background: #f0f4f8; text-align: center; padding: 20px; }
-        .tutorial-box { background: white; max-width: 500px; margin: auto; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        :root {
+            --primary: #007bff;
+            --success: #28a745;
+            --bg: #f0f4f8;
+            --medical-blue: #0056b3;
+        }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); text-align: center; padding: 20px; margin: 0; }
+        .tutorial-box { background: white; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         
-        /* 娃娃/人物底圖區 */
-        .character-stage { height: 250px; position: relative; margin-bottom: 20px; background: #e9ecef; border-radius: 15px; display: flex; justify-content: center; align-items: center; font-size: 50px; }
-        
-        /* 穿戴零件樣式 */
-        .part { position: absolute; padding: 8px 15px; border-radius: 10px; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .locked { background: #007bff; color: white; border: 2px solid #0056b3; }
-        .pending { background: #fff; color: #007bff; border: 2px dashed #007bff; }
-        .hidden { display: none; }
+        /* 娃娃換裝舞台 */
+        .character-stage { 
+            height: 280px; position: relative; margin-bottom: 25px; 
+            background: linear-gradient(180deg, #e9ecef 0%, #dee2e6 100%); 
+            border-radius: 15px; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; font-size: 100px; 
+            transition: 0.5s; overflow: hidden; border: 2px solid #ddd;
+        }
 
-        .hint { color: #666; font-size: 14px; margin-bottom: 20px; }
-        #congratulations { display: none; color: #28a745; font-weight: bold; }
+        /* 配件標籤樣式 */
+        .part-label { 
+            position: absolute; background: var(--success); color: white; 
+            padding: 8px 16px; border-radius: 20px; font-size: 14px; 
+            font-weight: bold; opacity: 0; transform: scale(0.5); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .part-label.active { opacity: 1; transform: scale(1); }
+
+        /* 按鈕區域 */
+        .btn-group { display: flex; flex-direction: column; gap: 15px; }
+        button { 
+            padding: 20px; border-radius: 50px; border: 2px dashed var(--primary); 
+            background: white; color: var(--primary); font-size: 17px; 
+            font-weight: bold; cursor: pointer; transition: 0.3s; 
+            -webkit-tap-highlight-color: transparent; outline: none;
+        }
+        button:hover:not(:disabled) { background: #f0f7ff; transform: translateY(-2px); }
+        button:disabled { border-color: #ccc; color: #ccc; cursor: not-allowed; }
+        button.done { background: var(--success); border: 2px solid var(--success); color: white; border-style: solid; }
+
+        /* 實證數據說明 */
+        .evidence-note { font-size: 13px; color: #555; margin-top: 15px; line-height: 1.6; text-align: left; background: #fff9e6; padding: 10px; border-radius: 10px; border-left: 4px solid #ffc107; }
+        #congrats { display: none; margin-top: 25px; border-top: 2px solid #eee; padding-top: 20px; animation: fadeIn 0.8s; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="tutorial-box">
-    <h2>iKneeGo 3分鐘快穿體驗</h2>
-    <p class="hint">請依序點擊零件，幫您的虛擬夥伴穿上外骨骼：</p>
-
-    <div class="character-stage">
-        <span id="char-icon">🚶‍♂️</span>
-        <div id="p1" class="part hidden" style="top: 80px; left: 180px;">✅ 腰部已鎖定</div>
-        <div id="p2" class="part hidden" style="top: 130px; left: 180px;">✅ 大腿已固定</div>
-        <div id="p3" class="part hidden" style="top: 180px; left: 180px;">✅ 小腿已固定</div>
+    <h2 style="color: var(--medical-blue); margin-top: 0;">iKneeGo 虛擬穿戴體驗</h2>
+    
+    <div class="character-stage" id="stage">
+        <span id="man">🚶‍♂️</span>
+        <div id="l1" class="part-label" style="top: 40px;">✅ 智慧腰帶：核心穩定</div>
+        <div id="l2" class="part-label" style="top: 110px;">✅ 大腿助力：減輕負擔</div>
+        <div id="l3" class="part-label" style="top: 180px;">✅ 足底感測：數據同步</div>
     </div>
 
-    <div id="controls">
-        <button id="step1" class="part pending">1. 扣上腰帶</button>
-        <button id="step2" class="part pending" disabled>2. 固定大腿</button>
-        <button id="step3" class="part pending" disabled>3. 固定小腿</button>
+    <div class="btn-group" id="btn-group">
+        <button id="s1" onclick="fitPart(1)">1. 扣上智慧腰帶</button>
+        <button id="s2" onclick="fitPart(2)" disabled>2. 固定雙側大腿束帶</button>
+        <button id="s3" onclick="fitPart(3)" disabled>3. 配置足底步態感應器</button>
     </div>
 
-    <div id="congratulations">
-        🎉 穿戴完成！已準備好進行「實證步態分析」。
-        <br><br>
-        <a href="index.html" style="color: #007bff; text-decoration: none;">點此開始行走測試 →</a>
+    <div class="evidence-note" id="ebm-info">
+        💡 <b>實證小知識：</b><br>
+        正確穿戴 iKneeGo 能在步態週期中有效分擔肌肉負荷 。
+    </div>
+
+    <div id="congrats">
+        <h3 style="color: var(--success); margin-bottom: 10px;">🎉 恭喜完成穿戴訓練！</h3>
+        <p style="font-size: 14px; margin-bottom: 20px;">臨床研究顯示，這套配置可提升高齡多重慢性病患者的平衡評分 (SPPB) 達 86% 。</p>
+        <a href="index.html" style="display: block; background: var(--medical-blue); color: white; text-decoration: none; padding: 15px; border-radius: 50px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,86,179,0.3);">
+            進入下一階段：步態分析模擬 →
+        </a>
     </div>
 </div>
 
 <script>
-    let currentStep = 1;
-    const char = document.getElementById('char-icon');
+    // 實證數據庫：隨步驟更新
+    const ebmData = [
+        "正確固定腰帶是穩定重心的關鍵，對 MS 患者的平衡至關重要 。",
+        "動力輔助能有效減少膝伸肌（如股四頭肌）在站立支撐期的負載 。",
+        "足底感測器能精準抓取 IC（著地）到 TO（離地）的即時步態相位 [cite: 1, 2, 4]。"
+    ];
 
-    function nextStep(step) {
-        document.getElementById('p' + step).classList.remove('hidden');
-        document.getElementById('p' + step).classList.add('locked');
-        document.getElementById('step' + step).style.background = '#28a745';
-        document.getElementById('step' + step).style.color = '#fff';
-        document.getElementById('step' + step).innerText = '已完成';
-        
-        if(step < 3) {
-            currentStep++;
-            document.getElementById('step' + currentStep).disabled = false;
+    function fitPart(step) {
+        // 更新按鈕
+        const currentBtn = document.getElementById('s' + step);
+        currentBtn.classList.add('done');
+        currentBtn.innerText = "✓ 配戴完成";
+        currentBtn.disabled = true;
+
+        // 顯示配件標籤
+        document.getElementById('l' + step).classList.add('active');
+
+        // 更新實證說明
+        document.getElementById('ebm-info').innerHTML = `💡 <b>實證數據：</b><br>${ebmData[step-1]}`;
+
+        // 觸發震動
+        if (navigator.vibrate) navigator.vibrate(60);
+
+        if (step < 3) {
+            document.getElementById('s' + (step + 1)).disabled = false;
         } else {
-            char.innerText = "🦾";
-            document.getElementById('congratulations').style.display = 'block';
-            document.getElementById('controls').style.display = 'none';
+            // 完工狀態
+            document.getElementById('man').innerHTML = "🦾";
+            document.getElementById('stage').style.background = "#e7f1ff";
+            document.getElementById('congrats').style.display = "block";
+            document.getElementById('ebm-info').style.borderLeftColor = "#28a745";
         }
     }
-
-    document.getElementById('step1').onclick = () => nextStep(1);
-    document.getElementById('step2').onclick = () => nextStep(2);
-    document.getElementById('step3').onclick = () => nextStep(3);
 </script>
 
 </body>
